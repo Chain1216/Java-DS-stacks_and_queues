@@ -9,9 +9,9 @@
  *    https://catalog.upenn.edu/pennbook/code-of-academic-integrity/
  *
  * Signed,
- * Author: YOUR NAME HERE
- * Penn email: <YOUR-EMAIL-HERE@seas.upenn.edu>
- * Date: YYYY-MM-DD
+ * Author: Zhaoqin Wu
+ * Penn email: zhaoqinw@seas.upenn.edu>
+ * Date: 2022-06-07
  */
 
 import java.util.Queue;
@@ -23,7 +23,41 @@ public class NestingChecker {
      */
     public static NestingReport checkNesting(Queue<? extends Nestable> elements) {
         Stack<Nestable> stack = new Stack<>();
-
+        
+        //If the input queue is null, return a NestingReport with status set to NULL_INPUT, badItem
+        //set to null, and stackState set to the empty Stack.
+        if (elements == null) {
+        	return new NestingReport(NestingReport.Status.NULL_INPUT, null, stack);
+        }
+        
+        
+        while(!elements.isEmpty()) {
+        	
+        	if(elements.element().getEffect() == Nestable.NestEffect.OPEN) {        // If the dequeued element¡¯s nesting effect is opening, we push it to a Stack.
+        		stack.add(elements.poll()); 		
+        	}
+        	
+        	else if(elements.element().getEffect() == Nestable.NestEffect.CLOSE) {  // If the dequeued element¡¯s nesting effect is closing, we pop the Stack only if the top of the Stack	                                                                 
+        		if(elements.element().matches(stack.peek())) {                      // matches the dequeued element;          
+        			elements.poll();
+        			stack.pop();
+        		}
+        		return new NestingReport(NestingReport.Status.INVALID_CLOSE, elements.element(), stack); // When an element b in the Queue is an invalid closing element, return
+        	}
+        	
+        	else if(elements.element().getEffect() == Nestable.NestEffect.NEUTRAL) { // ignore when the element's nesting effect is neutral
+        		continue;
+        	}
+        	
+        	else if(elements.element() == null) {
+        		return new NestingReport(NestingReport.Status.NOT_TERMINATED, null, stack); // When an element b in the Queue is an invalid closing element, return
+        	}	
+        }
+        
+        if (!stack.empty()) {                                                      //When the Queue represents an invalid nesting because it¡¯s empty but there are still elements
+        	return new NestingReport(NestingReport.Status.NULL_ITEM, null, stack); //remaining in the Stack that were never closed, return
+        }
+        
         return new NestingReport(NestingReport.Status.VALID, null, stack);
     }
 
